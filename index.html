@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mosaic Talent Advisory — Pay As They Perform Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#1b1f23;
+    --ink-soft:#4a5158;
+    --bg:#faf9f7;
+    --card:#ffffff;
+    --line:#e7e3dd;
+    --accent:#1f3d3a;        /* deep teal-green, professional/advisory feel */
+    --accent-soft:#e7efed;
+    --gold:#b08c4f;          /* warm accent for "Mosaic" highlight */
+    --danger:#b3503f;
+    --good:#2e6b53;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding:32px 16px 64px;
+  }
+  .wrap{max-width:980px;margin:0 auto;}
+  header{text-align:center;margin-bottom:36px;}
+  .kicker{
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-size:12px;
+    color:var(--gold);
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  h1{font-size:30px;margin:0 0 10px;line-height:1.25;}
+  h1 span{color:var(--accent);}
+  .sub{color:var(--ink-soft);font-size:15px;max-width:620px;margin:0 auto;line-height:1.5;}
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px 28px 22px;
+    margin-bottom:24px;
+    box-shadow:0 1px 3px rgba(0,0,0,.03);
+  }
+  .panel h2{font-size:16px;margin:0 0 18px;color:var(--ink);}
+  .row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:18px;}
+  .field{flex:1;min-width:220px;}
+  label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:6px;font-weight:600;}
+  .field .value{font-weight:700;color:var(--accent);font-size:15px;}
+  input[type=range]{
+    width:100%;
+    accent-color:var(--accent);
+  }
+  input[type=number]{
+    width:90px;
+    padding:6px 8px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+  }
+  .inline-num{display:flex;align-items:center;gap:8px;}
+  .stat-card label{color:var(--ink-soft);margin-top:10px;margin-bottom:6px;}
+  .stat-card .inline-num span{color:var(--ink-soft);font-size:13px;}
+  .stat-card input[type=number]{background:rgba(255,255,255,0.7);}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:720px){.grid{grid-template-columns:1fr;}}
+
+  .stat-card{
+    background:var(--accent-soft);
+    border-radius:12px;
+    padding:18px 20px;
+  }
+  .stat-card.alt{background:#fbf3e7;}
+  .stat-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);font-weight:700;margin-bottom:6px;}
+  .stat-num{font-size:26px;font-weight:700;color:var(--ink);}
+  .stat-foot{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+
+  .save-banner{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:var(--accent);
+    color:#fff;
+    border-radius:12px;
+    padding:20px 24px;
+    margin:20px 0;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .save-banner .label{font-size:13px;opacity:.85;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  .save-banner .num{font-size:30px;font-weight:800;}
+
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);}
+  th{color:var(--ink-soft);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;}
+  td.num{font-weight:700;}
+  tr.highlight td{color:var(--good);}
+
+  .legend-row{display:flex;gap:24px;margin:6px 0 18px;flex-wrap:wrap;}
+  .legend-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+
+  .foot-note{font-size:12.5px;color:var(--ink-soft);text-align:center;margin-top:28px;line-height:1.6;}
+  .cta{
+    text-align:center;
+    margin-top:8px;
+  }
+  .cta a{
+    display:inline-block;
+    background:var(--accent);
+    color:#fff;
+    padding:14px 30px;
+    border-radius:30px;
+    text-decoration:none;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:.02em;
+  }
+  canvas{max-width:100%;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Mosaic Talent Advisory</div>
+    <h1>Pay For The Hire That <span>Works</span></h1>
+    <p class="sub">Traditional agencies charge their full fee the day someone starts — right fit or wrong. Mosaic's model matches your cost to the risk: a smaller monthly fee, easier on cash flow, that stops the moment a hire isn't working out. See what that's worth on your next role.</p>
+  </header>
+
+  <div class="panel">
+    <h2>1. Tell us about the role</h2>
+    <div class="row">
+      <div class="field">
+        <label>Total package <span class="value" id="packageLabel">$120,000</span></label>
+        <input type="range" id="package" min="60000" max="280000" step="2500" value="120000">
+      </div>
+      <div class="field">
+        <label>If it's clear this hire isn't working out by: <span class="value" id="leaveLabel">Month 3</span></label>
+        <input type="range" id="leaveMonth" min="1" max="6" step="1" value="3">
+      </div>
+    </div>
+    <div class="grid">
+      <div class="stat-card">
+        <div class="stat-label">Traditional Agency</div>
+        <label>Placement fee (% of package, paid upfront on day one)</label>
+        <div class="inline-num">
+          <input type="number" id="tradFee" min="5" max="35" step="0.5" value="25">
+          <span>%</span>
+        </div>
+        <div class="stat-foot">The full invoice lands immediately — right fit or wrong, nothing changes.</div>
+      </div>
+      <div class="stat-card alt">
+        <div class="stat-label">Mosaic</div>
+        <label>Monthly fee (% of package, billed each month for up to 6 months)</label>
+        <div class="inline-num">
+          <input type="number" id="mosaicMonthly" min="0.5" max="6" step="0.1" value="2.5">
+          <span>% / month</span>
+        </div>
+        <div class="stat-foot">= <span id="mosaicTotalPct">15.0</span>% total if the hire works out. Billing stops the moment it doesn't.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. What a mis-hire actually costs you</h2>
+    <div class="grid">
+      <div class="stat-card">
+        <div class="stat-label">Traditional agency — you pay</div>
+        <div class="stat-num" id="tradPaid">$18,000</div>
+        <div class="stat-foot">Full fee, due at placement. Right fit or wrong, the invoice doesn't change.</div>
+      </div>
+      <div class="stat-card alt">
+        <div class="stat-label">Mosaic — you pay</div>
+        <div class="stat-num" id="mosaicPaid">$10,800</div>
+        <div class="stat-foot">A smaller fee, spread monthly. It stops the moment it's clear the hire isn't right — no further invoices.</div>
+      </div>
+    </div>
+
+    <div class="save-banner">
+      <div>
+        <div class="label">Your downside, capped</div>
+        <div class="stat-foot" style="color:#fff;opacity:.8;">what a mis-hire costs you, traditional vs Mosaic, at the month selected above</div>
+      </div>
+      <div class="num" id="savedAmount">$7,200 saved</div>
+    </div>
+
+    <div class="legend-row">
+      <div class="legend-item"><span class="dot" style="background:#b3503f"></span>Traditional agency (full fee on day one)</div>
+      <div class="legend-item"><span class="dot" style="background:#1f3d3a"></span>Mosaic (paid monthly, stops if it's not working out)</div>
+    </div>
+    <canvas id="chart" height="220"></canvas>
+  </div>
+
+  <div class="panel">
+    <h2>3. Full comparison</h2>
+    <table>
+      <thead>
+        <tr><th>Scenario</th><th>Traditional fee</th><th>Mosaic fee</th><th>Your saving</th></tr>
+      </thead>
+      <tbody id="scenarioBody"></tbody>
+    </table>
+  </div>
+
+  <div class="cta">
+    <a href="https://mosaicta.com.au/contact">See If This Model Fits Your Next Hire</a>
+  </div>
+
+  <p class="foot-note">
+    Illustrative example based on the inputs above. Mosaic's monthly fee is billed across the first 6 months of employment — the window in which a mis-hire typically becomes clear — and stops immediately if the hire is let go for performance or fit during that period. Excludes redundancy or restructure, which are treated under standard terms. Final fee structure confirmed in your services agreement.
+  </p>
+
+</div>
+
+<script>
+function fmt(n){ return '$' + Math.round(n).toLocaleString('en-AU'); }
+
+const packageEl = document.getElementById('package');
+const leaveEl = document.getElementById('leaveMonth');
+const tradFeeEl = document.getElementById('tradFee');
+const mosaicMonthlyEl = document.getElementById('mosaicMonthly');
+
+let chart;
+
+function render(){
+  const pkg = parseFloat(packageEl.value);
+  const leaveMonth = parseInt(leaveEl.value, 10);
+  const tradPct = parseFloat(tradFeeEl.value) / 100;
+  const monthlyPct = parseFloat(mosaicMonthlyEl.value) / 100;
+
+  document.getElementById('packageLabel').textContent = fmt(pkg);
+  document.getElementById('leaveLabel').textContent = 'Month ' + leaveMonth;
+  document.getElementById('mosaicTotalPct').textContent = (monthlyPct * 6 * 100).toFixed(1);
+
+  const tradTotal = pkg * tradPct;
+  const mosaicMonthlyAmt = pkg * monthlyPct;
+  const mosaicPaidAtLeave = mosaicMonthlyAmt * leaveMonth;
+  const saved = tradTotal - mosaicPaidAtLeave;
+
+  document.getElementById('tradPaid').textContent = fmt(tradTotal);
+  document.getElementById('mosaicPaid').textContent = fmt(mosaicPaidAtLeave);
+  document.getElementById('savedAmount').textContent = fmt(saved) + ' saved';
+
+  // cumulative cost lines over 6 months
+  const months = [0,1,2,3,4,5,6];
+  const tradLine = months.map(m => m === 0 ? 0 : tradTotal);
+  const mosaicLineFull = months.map(m => mosaicMonthlyAmt * m);
+  // mosaic line stops at leaveMonth
+  const mosaicLine = months.map(m => mosaicMonthlyAmt * Math.min(m, leaveMonth));
+
+  if(chart) chart.destroy();
+  chart = new Chart(document.getElementById('chart'), {
+    type: 'line',
+    data: {
+      labels: months.map(m => 'M' + m),
+      datasets: [
+        {
+          label: 'Traditional (full fee day one)',
+          data: tradLine,
+          borderColor: '#b3503f',
+          backgroundColor: 'rgba(179,80,63,0.08)',
+          borderWidth: 2,
+          stepped: true,
+          pointRadius: 0,
+          fill: true
+        },
+        {
+          label: 'Mosaic (stops on exit)',
+          data: mosaicLine,
+          borderColor: '#1f3d3a',
+          backgroundColor: 'rgba(31,61,58,0.12)',
+          borderWidth: 3,
+          pointRadius: 3,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { callback: v => '$' + (v/1000) + 'k' }, grid: { color: '#eee' } },
+        x: { grid: { display:false } }
+      }
+    }
+  });
+
+  // table
+  const body = document.getElementById('scenarioBody');
+  body.innerHTML = '';
+  const rows = [
+    {label:'Not working out — Month 1', m:1},
+    {label:'Not working out — Month 3', m:3},
+    {label:'Confirmed and performing — Month 6', m:6},
+  ];
+  rows.forEach(r => {
+    const mosaicAmt = mosaicMonthlyAmt * r.m;
+    const save = tradTotal - mosaicAmt;
+    const tr = document.createElement('tr');
+    if(r.m === leaveMonth) tr.classList.add('highlight');
+    tr.innerHTML = `<td>${r.label}</td><td class="num">${fmt(tradTotal)}</td><td class="num">${fmt(mosaicAmt)}</td><td class="num">${fmt(save)}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+[packageEl, leaveEl, tradFeeEl, mosaicMonthlyEl].forEach(el => el.addEventListener('input', render));
+render();
+</script>
+
+</body>
+</html>
